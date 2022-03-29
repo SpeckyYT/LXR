@@ -1,0 +1,79 @@
+#[cache_output]
+
+type @lxr
+
+impl @lxr {
+    new: #[constructor] (tokens: [[@string|@regex]]) -> @lxr {
+        [normal_tokens, ignore] = tokens.partition(token => token[1] != "ignore")
+        [string_tokens, regex_tokens] = normal_tokens.partition(token => token[0] is @string)
+        
+        return @lxr::{
+            original_string: "",
+            string: "",
+            tokens: {
+                ignore: ignore,
+                string: string_tokens.sort((a,b) => a[0].length > b[0].length),
+                regex: regex_tokens,
+            },
+            lexed: [],
+        }
+    },
+    lex: (self, string: @string) -> [@string] {
+        self.original_string = string
+        self.string = string
+        self.lexed = []
+
+        while self.string.length > 0 {
+            let matched = false
+            for string_token in self.tokens.string {
+                [input, output] = string_token
+                if self.string.starts_with(input) {
+                    self.lexed.push(output)
+                    self.string = self.string.substr(input.length, self.string.length)
+                    matched = true
+                    break
+                }
+            }
+            if matched { continue }
+            for regex_token in self.tokens.regex {
+                [token_regex, output] = regex_token
+                matches = input.find_all(self.string)
+                if matches.length == 0 { return }
+                if matches[0][0] > 0 { return }
+                if matches[0][1] - matches[0][0] > 1 { throw "regex length longer than 1 not implemented" }
+                self.lexed.push(output)
+                self.string = self.string.substr(matches[0][1], self.string.length)
+                matched = true
+                break
+            }
+            if matched { continue }
+            for ignore_token in self.tokens.ignore {
+                [input, output] = ignore_token
+                match input {
+                    @string: (){
+                        if self.string.starts_with(input) {
+                            self.string = self.string.substr(input.length, self.string.length)
+                            matched = true
+                        }
+                    }(),
+                    @regex: (){
+                        matches = input.find_all(self.string)
+                        if matches.length == 0 { return }
+                        if matches[0][0] > 0 { return }
+                        if matches[0][1] - matches[0][0] > 1 { throw "regex length longer than 1 not implemented" }
+                        self.string = self.string.substr(matches[0][1], self.string.length)
+                        matched = true
+                    }(),
+                }
+                if matched { break }
+            }
+            if matched { continue }
+            if !matched {
+                self.lexed.push("error")
+                self.string = self.string.substr(1, self.string.length)
+            }
+        }
+
+        return self.lexed
+    },
+}
