@@ -40,7 +40,6 @@ impl @lxr {
                 matches = input.find_all(self.string)
                 if matches.length == 0 { return }
                 if matches[0][0] > 0 { return }
-                if matches[0][1] - matches[0][0] > 1 { throw "regex length longer than 1 not implemented" }
                 self.lexed.push(output)
                 self.string = self.string.substr(matches[0][1], self.string.length)
                 matched = true
@@ -60,7 +59,6 @@ impl @lxr {
                         matches = input.find_all(self.string)
                         if matches.length == 0 { return }
                         if matches[0][0] > 0 { return }
-                        if matches[0][1] - matches[0][0] > 1 { throw "regex length longer than 1 not implemented" }
                         self.string = self.string.substr(matches[0][1], self.string.length)
                         matched = true
                     }(),
@@ -68,10 +66,9 @@ impl @lxr {
                 if matched { break }
             }
             if matched { continue }
-            if !matched {
-                self.lexed.push("error")
-                self.string = self.string.substr(1, self.string.length)
-            }
+
+            self.lexed.push("error")
+            self.string = self.string.substr(1, self.string.length)
         }
 
         return self.lexed

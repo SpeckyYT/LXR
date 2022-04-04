@@ -9,7 +9,7 @@ let lexer = @lxr::new([
     [",", "COMMA"],
     ["[", "OPEN"],
     ["]", "CLOSE"],
-    [regex("."), "ignore"],
+    [regex(r"."), "ignore"],
 ])
 
 output = lexer.lex(u"
